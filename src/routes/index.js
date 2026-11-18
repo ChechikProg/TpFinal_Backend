@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { query } from '../config/db.js'
+import authRoutes from './auth.routes.js'
 
 const router = Router()
 
@@ -13,8 +14,6 @@ router.get('/health', async (req, res, next) => {
   }
 })
 
-// Acá se van a montar las demás rutas:
-// router.use('/auth', authRoutes)
-// router.use('/library', libraryRoutes)
+router.use('/auth', authRoutes)
 
 export default router
