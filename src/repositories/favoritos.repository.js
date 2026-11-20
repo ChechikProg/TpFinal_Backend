@@ -1,4 +1,5 @@
 import { query } from '../config/db.js'
+import { traducirGenero } from '../utils/generos.js'
 
 export async function listar(usuarioId) {
   const { rows } = await query(
@@ -13,7 +14,7 @@ export async function listar(usuarioId) {
     idExterno: fila.id_externo,
     titulo: fila.titulo,
     portadaUrl: fila.portada_url,
-    generos: fila.generos,
+    generos: fila.generos.map(traducirGenero),
     plataformas: fila.plataformas,
     agregadoEn: fila.creado_en,
   }))

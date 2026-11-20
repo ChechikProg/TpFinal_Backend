@@ -1,4 +1,5 @@
 import { query } from '../config/db.js'
+import { traducirGenero } from '../utils/generos.js'
 
 // Columnas que devolvemos de cada juego de la biblioteca, con su puntaje,
 // si es favorito y si tiene reseña.
@@ -30,7 +31,7 @@ function aItem(fila) {
     fechaLanzamiento: fila.fecha_lanzamiento
       ? fila.fecha_lanzamiento.toISOString().slice(0, 10)
       : null,
-    generos: fila.generos,
+    generos: fila.generos.map(traducirGenero),
     plataformas: fila.plataformas,
     estado: fila.estado,
     horasJugadas: Number(fila.horas_jugadas),

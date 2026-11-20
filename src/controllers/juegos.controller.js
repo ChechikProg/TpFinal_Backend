@@ -26,3 +26,16 @@ export async function detalle(req, res, next) {
     next(error)
   }
 }
+
+export async function imagen(req, res, next) {
+  try {
+    const url = rawgService.validarUrlDeImagen(String(req.query.url || ''))
+    const { tipo, datos } = await rawgService.obtenerImagen(url)
+    res.set('Content-Type', tipo)
+    // El navegador la guarda una semana y no la vuelve a pedir
+    res.set('Cache-Control', 'public, max-age=604800, immutable')
+    res.send(datos)
+  } catch (error) {
+    next(error)
+  }
+}

@@ -1,4 +1,5 @@
 import { query } from '../config/db.js'
+import { traducirGenero } from '../utils/generos.js'
 
 // Guarda el juego (o actualiza sus datos si ya estaba) y devuelve su id interno.
 // Recibe `db` para poder usarse dentro de una transacción.
@@ -18,7 +19,7 @@ export async function guardar(juego, db = { query }) {
       juego.titulo,
       juego.portadaUrl,
       juego.fechaLanzamiento,
-      juego.generos,
+      juego.generos.map(traducirGenero),
       juego.plataformas,
     ]
   )
