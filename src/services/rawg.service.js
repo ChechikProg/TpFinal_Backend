@@ -1,5 +1,6 @@
 import { env } from '../config/env.js'
 import { HttpError } from '../utils/httpError.js'
+import { traducirGenero } from '../utils/generos.js'
 
 export const JUEGOS_POR_PAGINA = 20
 const DURACION_CACHE_MS = 10 * 60 * 1000 // 10 minutos
@@ -25,7 +26,8 @@ async function pedirARawg(ruta, params = {}) {
   let respuesta
   try {
     respuesta = await fetch(url, { signal: AbortSignal.timeout(10000) })
-  } catch {
+  } catch (error) {
+    console.error('No se pudo conectar con RAWG:', error.cause?.code || error.message)
     throw new HttpError(502, 'No se pudo conectar con la API de juegos')
   }
 
@@ -47,7 +49,7 @@ function aJuegoResumido(juego) {
     fechaLanzamiento: juego.released || null,
     puntaje: juego.rating,
     metacritic: juego.metacritic ?? null,
-    generos: (juego.genres || []).map((g) => g.name),
+    generos: (juego.genres || []).map((g) => traducirGenero(g.name)),
     plataformas: (juego.parent_platforms || []).map((p) => p.platform.name),
   }
 }
@@ -89,5 +91,51 @@ export async function obtenerJuego(idExterno) {
 
 export async function obtenerGeneros() {
   const datos = await pedirARawg('/genres', { page_size: 40 })
-  return datos.results.map((g) => ({ slug: g.slug, nombre: g.name }))
+  return datos.results.map((g) => ({ slug: g.slug, nombre: traducirGenero(g.name) }))
+}
+
+// ---------- Portadas ----------
+// Las imágenes de RAWG pasan por nuestro back para que se vean aunque la red
+// bloquee media.rawg.io. Solo aceptamos imágenes de ese dominio, así nadie
+// puede usar el servidor para descargar cualquier cosa de internet.
+const HOST_IMAGENES = 'media.rawg.io'
+const TAMANO_MAXIMO = 5 * 1024 * 1024 // 5 MB
+
+export function validarUrlDeImagen(texto) {
+  let url
+  try {
+    url = new URL(texto)
+  } catch {
+    throw new HttpError(400, 'La URL de la imagen no es válida')
+  }
+  if (url.protocol !== 'https:' || url.hostname !== HOST_IMAGENES) {
+    throw new HttpError(400, 'Solo se permiten imágenes de RAWG')
+  }
+  return url
+}
+
+// RAWG puede achicar la imagen: /media/games/x.jpg -> /media/resize/640/-/games/x.jpg
+function urlAchicada(url, ancho) {
+  const copia = new URL(url)
+  const coincide = copia.pathname.match(/^\/media\/(games|screenshots)\/(.+)$/)
+  if (coincide) copia.pathname = `/media/resize/${ancho}/-/${coincide[1]}/${coincide[2]}`
+  return copia
+}
+
+export async function obtenerImagen(url, ancho = 640) {
+  let respuesta
+  try {
+    respuesta = await fetch(urlAchicada(url, ancho), { signal: AbortSignal.timeout(10000) })
+  } catch {
+    throw new HttpError(502, 'No se pudo descargar la imagen')
+  }
+  if (!respuesta.ok) throw new HttpError(respuesta.status === 404 ? 404 : 502, 'No se pudo descargar la imagen')
+
+  const tipo = respuesta.headers.get('content-type') || ''
+  if (!tipo.startsWith('image/')) throw new HttpError(502, 'La respuesta no es una imagen')
+
+  const datos = Buffer.from(await respuesta.arrayBuffer())
+  if (datos.length > TAMANO_MAXIMO) throw new HttpError(502, 'La imagen es demasiado grande')
+
+  return { tipo, datos }
 }
