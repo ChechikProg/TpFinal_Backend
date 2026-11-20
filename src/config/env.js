@@ -7,4 +7,6 @@ export const env = {
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  rawgApiKey: process.env.RAWG_API_KEY,
+  rawgApiUrl: process.env.RAWG_API_URL || 'https://api.rawg.io/api',
 }
