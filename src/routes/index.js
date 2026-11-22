@@ -6,6 +6,10 @@ import juegosRoutes from './juegos.routes.js'
 import bibliotecaRoutes from './biblioteca.routes.js'
 import favoritosRoutes from './favoritos.routes.js'
 import actividadRoutes from './actividad.routes.js'
+import valoracionesRoutes from './valoraciones.routes.js'
+import coleccionesRoutes from './colecciones.routes.js'
+import perfilRoutes from './perfil.routes.js'
+import estadisticasRoutes from './estadisticas.routes.js'
 
 const router = Router()
 
@@ -26,5 +30,9 @@ router.use('/juegos', requiereAuth, juegosRoutes)
 router.use('/biblioteca', requiereAuth, bibliotecaRoutes)
 router.use('/favoritos', requiereAuth, favoritosRoutes)
 router.use('/actividad', requiereAuth, actividadRoutes)
+router.use('/valoraciones', requiereAuth, valoracionesRoutes)
+router.use('/colecciones', requiereAuth, coleccionesRoutes)
+router.use('/perfil', requiereAuth, perfilRoutes)
+router.use('/estadisticas', requiereAuth, estadisticasRoutes)
 
 export default router

@@ -50,3 +50,38 @@ export async function crear({ nombreUsuario, email, contrasenaHash }) {
   )
   return aUsuarioPublico(rows[0])
 }
+
+export async function listarGenerosPreferidos(usuarioId) {
+  const { rows } = await query('SELECT genero FROM usuario_generos WHERE usuario_id = $1 ORDER BY genero', [
+    usuarioId,
+  ])
+  return rows.map((f) => f.genero)
+}
+
+// Actualiza solo los campos que llegan
+export async function actualizarPerfil(usuarioId, datos, db = { query }) {
+  const columnas = {
+    nombre: 'nombre',
+    bio: 'bio',
+    avatarUrl: 'avatar_url',
+    plataformaPreferida: 'plataforma_preferida',
+  }
+  const sets = []
+  const params = [usuarioId]
+  for (const [campo, columna] of Object.entries(columnas)) {
+    if (datos[campo] !== undefined) {
+      params.push(datos[campo])
+      sets.push(`${columna} = $${params.length}`)
+    }
+  }
+  if (sets.length > 0) {
+    await db.query(`UPDATE usuarios SET ${sets.join(', ')}, actualizado_en = NOW() WHERE id = $1`, params)
+  }
+}
+
+export async function reemplazarGenerosPreferidos(usuarioId, generos, db = { query }) {
+  await db.query('DELETE FROM usuario_generos WHERE usuario_id = $1', [usuarioId])
+  for (const genero of generos) {
+    await db.query('INSERT INTO usuario_generos (usuario_id, genero) VALUES ($1, $2)', [usuarioId, genero])
+  }
+}
